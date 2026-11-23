@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your Setup — ANOSagent</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0a0d14; color: #e8ecf3; line-height: 1.5; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 190px; }
+
+  header { text-align: center; margin-bottom: 30px; }
+  header img { height: 46px; filter: drop-shadow(0 0 14px rgba(79,195,247,.4)); }
+  header h1 { font-size: 1.9rem; font-weight: 800; margin-top: 14px; letter-spacing: -.01em; }
+  header h1 .ice { color: #4fc3f7; }
+  header p { color: #8b93a7; margin-top: 8px; font-size: .95rem; }
+
+  .base-card {
+    background: linear-gradient(135deg, #0d2440, #123a63);
+    border: 1px solid #1e4a7a; border-radius: 14px;
+    padding: 22px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    margin-bottom: 8px; position: relative; overflow: hidden;
+  }
+  .base-card::after { content: ''; position: absolute; right: -50px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(79,195,247,.2), transparent 65%); }
+  .base-card h2 { font-size: 1.12rem; }
+  .base-card p { color: #9fd7f5; font-size: .88rem; margin-top: 4px; max-width: 540px; }
+  .base-price { font-size: 1.55rem; font-weight: 800; color: #4fc3f7; white-space: nowrap; position: relative; z-index: 1; }
+  .base-note { color: #66707f; font-size: .78rem; margin: 6px 0 0 2px; }
+
+  .section-title { font-size: .78rem; text-transform: uppercase; letter-spacing: .14em; color: #7c8494; margin: 30px 0 4px; font-weight: 800; }
+  .section-sub { color: #66707f; font-size: .85rem; margin-bottom: 14px; }
+
+  .card {
+    display: block; background: #10141d; border: 1px solid #242d3f; border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 10px; cursor: pointer;
+    transition: border-color .15s, background .15s;
+    user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .card:hover { border-color: #35507a; }
+  .card.checked { border-color: #4fc3f7; background: #0e1c2c; }
+  .card input { position: absolute; opacity: 0; pointer-events: none; }
+  .card-row { display: flex; align-items: flex-start; gap: 14px; }
+  .box {
+    width: 22px; height: 22px; flex-shrink: 0; margin-top: 2px;
+    border: 2px solid #3a4a66; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; transition: all .15s;
+  }
+  .card.checked .box { background: #4fc3f7; border-color: #4fc3f7; }
+  .box svg { width: 13px; height: 13px; stroke: #0a0d14; stroke-width: 3; fill: none; opacity: 0; }
+  .card.checked .box svg { opacity: 1; }
+  .f-body { flex: 1; }
+  .f-name { font-weight: 700; font-size: .98rem; }
+  .f-desc { color: #8b93a7; font-size: .84rem; margin-top: 2px; }
+  .f-price { font-weight: 800; color: #4fc3f7; white-space: nowrap; margin-top: 2px; }
+  .pkg { border-color: #2c3d5c; }
+  .save-tag { display: inline-block; background: #ff7a1a; color: #fff; font-size: .68rem; font-weight: 800; border-radius: 5px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+  .pkg-includes { margin: 10px 0 0 36px; font-size: .8rem; color: #7c8494; }
+  .pkg-includes li { margin: 2px 0; }
+
+  .plans { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .plans { grid-template-columns: repeat(2, 1fr); } }
+  .plan-card {
+    background: #10141d; border: 1px solid #242d3f; border-radius: 12px; padding: 14px 14px 12px;
+    cursor: pointer; text-align: center; transition: all .15s; position: relative;
+    user-select: none; -webkit-user-select: none;
+  }
+  .plan-card:hover { border-color: #35507a; }
+  .plan-card.checked { border-color: #ff7a1a; background: #1c1410; }
+  .plan-card .pn { font-weight: 800; font-size: .9rem; text-transform: uppercase; letter-spacing: .06em; }
+  .plan-card .pv { font-size: 1.35rem; font-weight: 800; color: #4fc3f7; margin: 4px 0 2px; }
+  .plan-card.checked .pv { color: #ff7a1a; }
+  .plan-card .pv span { font-size: .68rem; color: #7c8494; font-weight: 600; }
+  .plan-card .pd { font-size: .72rem; color: #7c8494; line-height: 1.4; }
+  .plan-card .hot-tag { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: #ff7a1a; color: #fff; font-size: .56rem; font-weight: 800; letter-spacing: .08em; padding: 2px 8px; border-radius: 8px; }
+
+  .total-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #0c1018; border-top: 1px solid #242d3f; padding: 14px 20px; z-index: 10; }
+  .total-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .t-label { color: #8b93a7; font-size: .82rem; }
+  .t-amount { font-size: 1.8rem; font-weight: 800; color: #4fc3f7; line-height: 1.1; }
+  .t-monthly { font-size: .82rem; color: #8b93a7; }
+  .t-monthly b { color: #ff7a1a; }
+  .cta { background: linear-gradient(135deg, #4fc3f7, #1a4f8a); color: #fff; border: none; font-weight: 800; font-size: .98rem; padding: 14px 28px; border-radius: 10px; cursor: pointer; transition: transform .1s, box-shadow .2s; box-shadow: 0 6px 20px rgba(79,195,247,.25); }
+  .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 26px rgba(79,195,247,.4); }
+
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 20; align-items: center; justify-content: center; padding: 20px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #10141d; border: 1px solid #242d3f; border-radius: 16px; padding: 26px; max-width: 440px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 4px; }
+  .modal .sub { color: #8b93a7; font-size: .88rem; margin-bottom: 16px; }
+  .modal label { display: block; font-size: .82rem; color: #8b93a7; margin: 12px 0 4px; }
+  .modal input { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid #2e3a50; background: #0a0d14; color: #e8ecf3; font-size: 1rem; }
+  .modal input:focus { outline: none; border-color: #4fc3f7; }
+  .modal .summary { background: #0a0d14; border: 1px solid #1c2433; border-radius: 10px; padding: 13px; font-size: .83rem; color: #8b93a7; margin-top: 16px; max-height: 170px; overflow-y: auto; line-height: 1.6; }
+  .modal .summary strong { color: #4fc3f7; }
+  .modal .cta { width: 100%; margin-top: 16px; }
+  .close-x { float: right; background: none; border: none; color: #8b93a7; font-size: 1.25rem; cursor: pointer; }
+  .form-err { color: #f87171; font-size: .82rem; margin-top: 10px; min-height: 1.1em; }
+  .sent { text-align: center; padding: 20px 0; display: none; }
+  .sent .check { font-size: 3rem; color: #4fc3f7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="/logos/anos.svg" alt="ANOSagent" onerror="this.style.display='none'">
+    <h1>Build your <span class="ice">AI agent setup</span></h1>
+    <p>Pick what you want — your setup quote updates live. No surprises, no lock-in.</p>
+  </header>
+
+  <div class="base-card">
+    <div>
+      <h2>Base Setup</h2>
+      <p>Your private server, AI agent configured for your business, CRM import, branding, and a full walkthrough. Every build starts here.</p>
+    </div>
+    <div class="base-price">$500</div>
+  </div>
+  <div class="base-note">One-time · <b style="color:#9fd7f5">waived free</b> on a 12-month agreement</div>
+
+  <div class="section-title">Packages — one-time builds</div>
+  <div class="section-sub">The three systems contractors ask for most.</div>
+  <div id="packages"></div>
+
+  <div class="section-title">Monthly plan</div>
+  <div class="section-sub">Keeps your agent running 24/7. Pick one — required with any build.</div>
+  <div class="plans" id="plans"></div>
+
+  <div class="section-title">Individual add-ons</div>
+  <div class="section-sub">Fine-tune the build. (Already inside a package you picked? It's only charged once.)</div>
+  <div id="features"></div>
+</div>
+
+<div class="total-bar">
+  <div class="total-inner">
+    <div>
+      <div class="t-label">One-time build quote</div>
+      <div class="t-amount" id="total">$500</div>
+      <div class="t-monthly" id="monthly">+ pick a monthly plan below</div>
+    </div>
+    <button class="cta" onclick="openModal()">Get This Quote →</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <div id="leadForm">
+      <h3>Lock in your quote</h3>
+      <div class="sub">We reach out within 24 hours to get you set up.</div>
+      <label>Name</label><input type="text" id="name">
+      <label>Business Name</label><input type="text" id="biz">
+      <label>Email</label><input type="email" id="email">
+      <label>Phone</label><input type="tel" id="phone">
+      <div class="summary" id="summaryBox"></div>
+      <div class="form-err" id="formErr"></div>
+      <button class="cta" id="submitBtn" onclick="submitLead()">Send My Quote Request</button>
+    </div>
+    <div class="sent" id="sentMsg">
+      <div class="check">✓</div>
+      <h3>Quote request sent!</h3>
+      <p style="color:#8b93a7;margin-top:6px;">We'll be in touch within 24 hours.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = 500;
+
+const PLANS = {
+  lite:    { name: 'Lite',    price: 147, desc: 'Agent + CRM + email automation · 2 seats' },
+  starter: { name: 'Starter', price: 297, desc: '+ follow-ups, invoicing, reports · 5 seats', hot: true },
+  pro:     { name: 'Pro',     price: 497, desc: '+ AI front desk & integrations · unlimited seats' },
+  scale:   { name: 'Scale',   price: 797, desc: 'Multi-crew, custom workflows, priority support' },
+};
+
+const FEATURES = {
+  quotes:     { name: "Branded Quote PDFs", desc: "Estimates in your logo & colours, drafted by the agent from your voice notes.", price: 300 },
+  quotechase: { name: "Quote Follow-Up Chaser", desc: "Auto-nudges unsold quotes at day 3, 7, and 14 — recovers jobs that would've gone cold.", price: 300 },
+  reviews:    { name: "Review Requests", desc: "Auto-asks happy customers for Google reviews after each job; flags bad ones to you first.", price: 200 },
+  rebook:     { name: "Rebook & Win-Back Nudges", desc: "Scheduled check-ins that bring past customers back before they call someone else.", price: 200 },
+  voice:      { name: "AI Phone Answering", desc: "Your business line answered 24/7 in your brand voice — takes details, books jobs.", price: 450 },
+  booking:    { name: "Calendar Booking", desc: "Jobs booked straight into your calendar with reminders and reschedule handling.", price: 300 },
+  callsummary:{ name: "Instant Call Summaries", desc: "A text to your phone after every call: who, what they need, how urgent.", price: 150 },
+  textback:   { name: "Missed-Call Text-Back", desc: "Missed call? The customer gets a text back within seconds so you never lose the lead.", price: 250 },
+  invoicing:  { name: "Invoicing & Payment Reminders", desc: "Invoices sent and politely chased automatically until they're paid.", price: 200 },
+  portal:     { name: "Client Portal", desc: "Your customers log in to see their quotes, jobs, invoices, and live status.", price: 350 },
+  social:     { name: "Social Media Automation", desc: "AI creates and schedules posts for Facebook & Instagram — content, images, captions.", price: 350 },
+  briefing:   { name: "Daily Morning Brief", desc: "A text every morning: today's jobs, unsigned quotes, unpaid invoices, weather.", price: 200 },
+};
+
+const PACKAGES = {
+  pkg_quotes: {
+    name: "Quote System",
+    desc: "Your whole quoting process on autopilot — from first text to signed job.",
+    includes: ["quotes", "quotechase", "briefing"],
+    price: 900,
+  },
+  pkg_followup: {
+    name: "Client Follow-Up",
+    desc: "Never let a quote or a customer go cold again.",
+    includes: ["quotechase", "reviews", "rebook", "invoicing"],
+    price: 600,
+  },
+  pkg_frontdesk: {
+    name: "Front Desk",
+    desc: "Every call handled, 24/7 — answered, booked, and summarized to your phone.",
+    includes: ["voice", "booking", "callsummary", "textback"],
+    price: 800,
+  },
+};
+
+const state = { packages: new Set(), features: new Set(), plan: null };
+
+function pkgSavings(p) { return p.includes.reduce((s, k) => s + FEATURES[k].price, 0) - p.price; }
+
+function makeCard(id, title, desc, priceHTML, extraClass, includes) {
+  const card = document.createElement('div');
+  card.className = 'card ' + extraClass;
+  card.id = 'card_' + id;
+  let inc = '';
+  if (includes) {
+    inc = '<ul class="pkg-includes">' + includes.map(k =>
+      `<li>${FEATURES[k].name} <span style="color:#4a5568">($${FEATURES[k].price} value)</span></li>`).join('') + '</ul>';
+  }
+  card.innerHTML = `
+    <div class="card-row">
+      <span class="box"><svg viewBox="0 0 24 24"><path d="M4 12l6 6L20 6"/></svg></span>
+      <span class="f-body">
+        <div class="f-name">${title}</div>
+        <div class="f-desc">${desc}</div>
+      </span>
+      <span class="f-price">${priceHTML}</span>
+    </div>${inc}`;
+  card.addEventListener('click', () => toggle(id));
+  return card;
+}
+
+function render() {
+  const pkgDiv = document.getElementById('packages');
+  Object.entries(PACKAGES).forEach(([id, p]) => {
+    const save = pkgSavings(p);
+    pkgDiv.appendChild(makeCard(id, p.name, p.desc,
+      `+$${p.price}<span class="save-tag">SAVE $${save}</span>`, 'pkg', p.includes));
+  });
+  const featDiv = document.getElementById('features');
+  Object.entries(FEATURES).forEach(([id, f]) => {
+    featDiv.appendChild(makeCard(id, f.name, f.desc, `+$${f.price}`, '', null));
+  });
+  const planDiv = document.getElementById('plans');
+  Object.entries(PLANS).forEach(([id, p]) => {
+    const el = document.createElement('div');
+    el.className = 'plan-card';
+    el.id = 'plan_' + id;
+    el.innerHTML = `${p.hot ? '<span class="hot-tag">POPULAR</span>' : ''}
+      <div class="pn">${p.name}</div>
+      <div class="pv">$${p.price}<span>/mo</span></div>
+      <div class="pd">${p.desc}</div>`;
+    el.addEventListener('click', () => { state.plan = state.plan === id ? null : id; sync(); });
+    planDiv.appendChild(el);
+  });
+}
+
+function toggle(id) {
+  if (PACKAGES[id]) {
+    state.packages.has(id) ? state.packages.delete(id) : state.packages.add(id);
+  } else {
+    state.features.has(id) ? state.features.delete(id) : state.features.add(id);
+  }
+  sync();
+}
+
+function activeFeatures() {
+  const active = new Set(state.features);
+  state.packages.forEach(p => PACKAGES[p].includes.forEach(k => active.add(k)));
+  return active;
+}
+
+function sync() {
+  const active = activeFeatures();
+  Object.keys(PACKAGES).forEach(id =>
+    document.getElementById('card_' + id).classList.toggle('checked', state.packages.has(id)));
+  Object.keys(FEATURES).forEach(id =>
+    document.getElementById('card_' + id).classList.toggle('checked', active.has(id)));
+  Object.keys(PLANS).forEach(id =>
+    document.getElementById('plan_' + id).classList.toggle('checked', state.plan === id));
+  update();
+}
+
+function currentTotal() {
+  let total = BASE;
+  state.packages.forEach(p => total += PACKAGES[p].price);
+  const covered = new Set();
+  state.packages.forEach(p => PACKAGES[p].includes.forEach(k => covered.add(k)));
+  state.features.forEach(f => { if (!covered.has(f)) total += FEATURES[f].price; });
+  return total;
+}
+
+function selectedLabels() {
+  const labels = [];
+  state.packages.forEach(p => labels.push(PACKAGES[p].name + ' (package)'));
+  const covered = new Set();
+  state.packages.forEach(p => PACKAGES[p].includes.forEach(k => covered.add(k)));
+  state.features.forEach(f => { if (!covered.has(f)) labels.push(FEATURES[f].name); });
+  return labels;
+}
+
+const fmt = n => '$' + n.toLocaleString();
+function update() {
+  document.getElementById('total').textContent = fmt(currentTotal());
+  const n = state.packages.size + state.features.size;
+  document.getElementById('monthly').innerHTML =
+    (state.plan ? `+ <b>$${PLANS[state.plan].price}/mo</b> ${PLANS[state.plan].name} plan` : '+ pick a monthly plan below') +
+    (n ? ` · ${n} add-on${n > 1 ? 's' : ''}` : '');
+}
+
+function openModal() {
+  const items = selectedLabels();
+  document.getElementById('summaryBox').innerHTML =
+    `<strong>${fmt(currentTotal())} one-time</strong>${state.plan ? ` + <strong>$${PLANS[state.plan].price}/mo</strong> (${PLANS[state.plan].name})` : ' <span style="color:#f87171">— no monthly plan picked yet</span>'}<br>Base Setup — $${BASE}<br>` +
+    (items.length ? items.join('<br>') : 'No add-ons selected');
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+async function submitLead() {
+  const err = document.getElementById('formErr');
+  err.textContent = '';
+  if (!state.plan) { err.textContent = 'Pick a monthly plan first — it keeps your agent running.'; return; }
+  const lead = {
+    name: document.getElementById('name').value.trim(),
+    business: document.getElementById('biz').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    items: selectedLabels(),
+    total: currentTotal(),
+    monthly: PLANS[state.plan].name + ' $' + PLANS[state.plan].price + '/mo',
+  };
+  if (!lead.name) { err.textContent = 'Your name is required.'; return; }
+  if (!lead.email || !lead.email.includes('@')) { err.textContent = 'A valid email is required.'; return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const res = await fetch('/api/setup-lead', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(lead)
+    });
+    const data = await res.json();
+    if (!data.ok) { err.textContent = data.error || 'Something went wrong — try again.'; btn.disabled = false; btn.textContent = 'Send My Quote Request'; return; }
+  } catch (e) {
+    err.textContent = 'Could not reach the server — please call or text us directly.';
+    btn.disabled = false; btn.textContent = 'Send My Quote Request';
+    return;
+  }
+  document.getElementById('leadForm').style.display = 'none';
+  document.getElementById('sentMsg').style.display = 'block';
+}
+render();
+update();
+</script>
+</body>
+</html>

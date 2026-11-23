@@ -1,0 +1,33 @@
+# Secrets & env
+.env
+.portal_bridge_token
+
+# Database & data
+portal.db
+*.db
+*.db-journal
+customers.json
+sessions.json
+client_errors.log
+
+# Uploads
+uploads/
+
+# Backups
+*.bak
+*.bak-*
+*.broken-*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

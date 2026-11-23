@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign Document</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; }
+body { font-family: -apple-system, 'Segoe UI', Inter, sans-serif; background: #0b0d10; color: #e8ecf1; min-height: 100vh; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 20px 14px 60px; }
+.logo { text-align: center; font-weight: 800; font-size: .72rem; letter-spacing: .18em; color: #8b94a3; text-transform: uppercase; margin: 16px 0 6px; }
+h1 { font-size: 1.35rem; text-align: center; margin-bottom: 6px; }
+.biz { text-align: center; color: #4f7dff; font-weight: 700; font-size: .9rem; margin-bottom: 18px; }
+.card { background: #131720; border: 1px solid #232a36; border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+.doc-row { display: flex; gap: 14px; align-items: center; }
+.doc-ico { width: 46px; height: 46px; border-radius: 12px; background: #1a2029; border: 1px solid #2a3342; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.doc-name { font-weight: 700; font-size: .95rem; word-break: break-word; }
+.doc-note { color: #8b94a3; font-size: .78rem; margin-top: 4px; }
+.steps { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 4px 0 14px; }
+.step { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #556072; }
+.step.on { color: #7fb0ff; }
+.step-arrow { color: #3a4353; }
+.fpage { position: relative; margin: 0 auto 16px; background: #fff; border-radius: 8px; box-shadow: 0 2px 14px rgba(0,0,0,.45); overflow: hidden; }
+.fpage canvas { display: block; width: 100%; }
+.docx-page { padding: 34px 26px; color: #111827; min-height: 60vh; overflow-wrap: anywhere; }
+.docx-page img { max-width: 100%; height: auto; }
+.docx-page table { width: 100%; border-collapse: collapse; }
+.docx-page td, .docx-page th { border: 1px solid #d1d5db; padding: 6px 8px; }
+.ffield { position: absolute; border: 2px dashed rgba(79,125,255,.65); background: rgba(79,125,255,.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; color: #3b62d6; cursor: pointer; animation: fpulse 2.2s infinite; }
+.ffield.sig { border-color: rgba(217,119,6,.75); background: rgba(251,191,36,.13); color: #92600a; }
+.ffield.company { border-color: rgba(22,163,74,.75); background: rgba(74,222,128,.11); color: #166534; animation: none; cursor: default; }
+.ffield.company .role-tag { display: inline-block; margin-right: 5px; padding: 2px 6px; border-radius: 6px; background: #4ade80; color: #052e12; font-size: .58rem; font-weight: 900; }
+.ffield.filled { border-style: solid; border-color: rgba(22,163,74,.7); background: rgba(74,222,128,.1); color: #166534; animation: none; }
+.ffield input { width: 100%; height: 100%; border: none; background: transparent; padding: 2px 6px; font-size: .8rem; color: #111827; text-align: center; outline: none; }
+@keyframes fpulse { 0%,100% { box-shadow: 0 0 0 0 rgba(79,125,255,.25); } 50% { box-shadow: 0 0 0 6px rgba(79,125,255,0); } }
+.padbg { position: fixed; inset: 0; z-index: 50; background: rgba(5,7,10,.88); display: none; align-items: center; justify-content: center; padding: 18px; }
+.padbg.open { display: flex; }
+.padcard { background: #131720; border: 1px solid #2a3342; border-radius: 18px; padding: 18px; width: 100%; max-width: 520px; }
+.padcard h3 { margin-bottom: 4px; font-size: 1.05rem; }
+.padcard .sub { color: #8b94a3; font-size: .8rem; margin-bottom: 12px; }
+.sigpad { width: 100%; height: 190px; background: #fff; border-radius: 12px; touch-action: none; cursor: crosshair; }
+.sigmode { display: flex; gap: 8px; margin-bottom: 10px; }
+.sigmode-btn { flex: 1; background: #1a2029; border: 1px solid #2a3342; color: #aab3c0; border-radius: 10px; padding: 10px; font-weight: 700; font-size: .8rem; cursor: pointer; }
+.sigmode-btn.on { background: rgba(79,125,255,.12); border-color: rgba(79,125,255,.4); color: #7fb0ff; }
+.pad-actions { display: flex; gap: 10px; margin-top: 12px; }
+.pad-actions button { flex: 1; border-radius: 11px; padding: 13px; font-weight: 800; font-size: .9rem; cursor: pointer; border: none; }
+.pad-ok { background: linear-gradient(135deg, #4f7dff, #3b62d6); color: #fff; }
+.pad-clear { background: #1a2029; border: 1px solid #2a3342 !important; color: #aab3c0; }
+.submit { width: 100%; background: linear-gradient(135deg, #4f7dff, #3b62d6); color: #fff; border: none; border-radius: 13px; padding: 17px; font-size: 1.02rem; font-weight: 800; margin-top: 4px; cursor: pointer; }
+.submit:disabled { opacity: .5; }
+.done { text-align: center; padding: 44px 10px; display: none; }
+.done .tick { font-size: 3rem; }
+.done h2 { margin: 12px 0 6px; }
+.done p { color: #8b94a3; font-size: .9rem; }
+.err { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: #f87171; border-radius: 10px; padding: 12px; font-size: .85rem; margin-top: 14px; display: none; }
+.legal { color: #6b7280; font-size: .7rem; text-align: center; margin-top: 16px; line-height: 1.5; }
+.loading { text-align: center; color: #8b94a3; padding: 34px; font-size: .9rem; }
+</style></head><body>
+<div class="wrap">
+  <div class="logo">Document Signing</div>
+  <h1 id="docTitle">…</h1>
+  <div class="biz" id="bizName"></div>
+  <div id="main">
+    <div class="card">
+      <div class="doc-row">
+        <div class="doc-ico">📄</div>
+        <div><div class="doc-name" id="docName"></div><div class="doc-note" id="docNote"></div></div>
+      </div>
+    </div>
+    <div class="steps"><span class="step on">1 · Review &amp; fill the highlighted boxes</span><span class="step-arrow">→</span><span class="step">2 · Submit</span></div>
+    <div id="pagesHost"><div class="loading">Loading document…</div></div>
+    <button class="submit" id="signBtn" onclick="submitAll()">✅ Submit Signed Document</button>
+    <div class="err" id="err"></div>
+    <div class="legal">By submitting, you agree this electronic signature is legally binding and equivalent to a handwritten signature. A record including timestamp and IP address is stored.</div>
+  </div>
+  <div class="done" id="done">
+    <div class="tick">✅</div>
+    <h2>Document signed</h2>
+    <p id="doneMsg">Thanks — your signature has been recorded.</p>
+  </div>
+</div>
+
+<div class="padbg" id="padBg">
+  <div class="padcard">
+    <h3 id="padTitle">Sign here</h3>
+    <div class="sub">Draw with your finger, or switch to Type.</div>
+    <div class="sigmode">
+      <button class="sigmode-btn on" id="modeDraw" onclick="sigMode('draw')">✏️ Draw</button>
+      <button class="sigmode-btn" id="modeType" onclick="sigMode('type')">⌨️ Type</button>
+    </div>
+    <canvas class="sigpad" id="pad"></canvas>
+    <div id="typeWrap" style="display:none">
+      <input type="text" id="typedSig" placeholder="Type your name" maxlength="60" style="width:100%;background:#fff;color:#1a2233;border:none;border-radius:12px;padding:16px;font-size:1.6rem;font-family:'Segoe Script','Brush Script MT',cursive;text-align:center">
+      <canvas id="typePad" style="display:none"></canvas>
+    </div>
+    <div class="pad-actions">
+      <button class="pad-clear" onclick="clearPad()">Clear</button>
+      <button class="pad-ok" onclick="padDone()">✓ Use Signature</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN = '__TOKEN__';
+let DOC = null, FIELDS = [], PDF = null, ACTIVE_FIELD = null, SIG_MODE = 'draw';
+const VALUES = {};
+
+fetch('/api/sign-doc/' + TOKEN).then(r => r.json()).then(async d => {
+  if (d.error) { document.getElementById('docTitle').textContent = 'Link invalid or expired'; document.getElementById('main').style.display = 'none'; return; }
+  DOC = d;
+  document.getElementById('docTitle').textContent = 'Please review and sign';
+  document.getElementById('bizName').textContent = d.business;
+  document.getElementById('docName').textContent = d.name;
+  document.getElementById('docNote').textContent = d.note || d.doc_type;
+  FIELDS = d.fields || [];
+  if (d.status === 'signed') {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('done').style.display = 'block';
+    document.getElementById('doneMsg').textContent = 'Already signed by ' + d.signed_by + '.';
+    return;
+  }
+  await renderPages();
+});
+
+async function renderPages() {
+  const host = document.getElementById('pagesHost');
+  host.innerHTML = '';
+  const isDocx = /wordprocessingml/i.test(DOC.mime || '') || /\.docx$/i.test(DOC.name || '');
+  if (isDocx) {
+    try {
+      const buf = await (await fetch(DOC.url)).arrayBuffer();
+      const out = await mammoth.convertToHtml({arrayBuffer: buf});
+      host.innerHTML = '<div class="fpage docx-page" data-page="1">' + (out.value || 'No readable content.') + '</div>';
+    } catch (e) {
+      host.innerHTML = '<div class="loading">Could not render the Word document here — <a href="' + DOC.url + '" target="_blank" rel="noopener" style="color:#7fb0ff;font-weight:700">open it in a new tab</a> to review, then fill the boxes below.</div>';
+      renderBlank(host, 1);
+      return;
+    }
+    if (!FIELDS.length) {
+      const pageH = Math.max(1, host.querySelector('.docx-page')?.offsetHeight || 900);
+      const sigH = Math.min(0.08, 90 / pageH);
+      const nameH = Math.min(0.05, 44 / pageH);
+      FIELDS = [{page: 1, type: 'signature', x: 0.1, y: Math.max(0.05, 1 - (190 / pageH) - sigH), w: 0.5, h: sigH, label: 'Sign here'},
+                {page: 1, type: 'name', x: 0.1, y: Math.max(0.05, 1 - (80 / pageH) - nameH), w: 0.5, h: nameH, label: 'Full name'}];
+    }
+    FIELDS.forEach((f, i) => addField(f, i));
+    return;
+  }
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    PDF = await pdfjsLib.getDocument(DOC.url).promise;
+  } catch (e) {
+    host.innerHTML = '<div class="loading">Could not render the document here — <a href="' + DOC.url + '" target="_blank" rel="noopener" style="color:#7fb0ff;font-weight:700">open it in a new tab</a> to review, then fill the boxes below.</div>';
+    renderBlank(host, 1);
+    return;
+  }
+  for (let p = 1; p <= PDF.numPages; p++) {
+    const el = document.createElement('div');
+    el.className = 'fpage';
+    el.dataset.page = p;
+    host.appendChild(el);
+    const page = await PDF.getPage(p);
+    const vp = page.getViewport({scale: 1.5});
+    const cv = document.createElement('canvas');
+    cv.width = vp.width; cv.height = vp.height;
+    el.appendChild(cv);
+    await page.render({canvasContext: cv.getContext('2d'), viewport: vp}).promise;
+  }
+  if (!FIELDS.length) {
+    FIELDS = [{page: PDF.numPages, type: 'signature', x: 0.1, y: 0.82, w: 0.5, h: 0.08, label: 'Sign here'},
+              {page: PDF.numPages, type: 'name', x: 0.1, y: 0.92, w: 0.5, h: 0.045, label: 'Full name'}];
+  }
+  FIELDS.forEach((f, i) => addField(f, i));
+}
+function renderBlank(host, pages) {
+  for (let p = 1; p <= pages; p++) {
+    const el = document.createElement('div');
+    el.className = 'fpage'; el.dataset.page = p;
+    el.style.height = '60vh';
+    host.appendChild(el);
+  }
+  FIELDS.forEach((f, i) => addField(f, i));
+}
+function addField(f, idx) {
+  const pageEl = document.querySelector('.fpage[data-page="' + f.page + '"]');
+  if (!pageEl) return;
+  const el = document.createElement('div');
+  el.className = 'ffield' + (f.type === 'signature' ? ' sig' : '');
+  el.style.left = (f.x * 100) + '%';
+  el.style.top = (f.y * 100) + '%';
+  el.style.width = (f.w * 100) + '%';
+  el.style.height = (f.h * 100) + '%';
+  el.id = 'ff-' + idx;
+  const role = f.role === 'company' ? 'company' : 'client';
+  if (role === 'company') {
+    el.classList.add('company');
+    const icons = {signature: '✍️', name: '👤', date: '📅', text: '🅣'};
+    el.innerHTML = '<span><span class="role-tag">COMPANY</span>' + (icons[f.type] || '') + ' ' + (f.label || f.type) + '</span>';
+    pageEl.appendChild(el);
+    return;
+  }
+  if (f.type === 'signature') {
+    el.innerHTML = '<span>✍️ ' + (f.label || 'Tap to sign') + '</span>';
+    el.onclick = () => openPad(idx, f.label);
+  } else if (f.type === 'date') {
+    el.innerHTML = '<span>📅 ' + (f.label || 'Date') + '</span>';
+    el.onclick = () => fillDate(idx);
+  } else {
+    el.innerHTML = '<input placeholder="' + (f.label || (f.type === 'name' ? 'Full name' : 'Type here')) + '">';
+    const inp = el.querySelector('input');
+    inp.addEventListener('input', () => {
+      VALUES[idx] = {type: f.type, text: inp.value.trim()};
+      el.classList.toggle('filled', !!inp.value.trim());
+    });
+  }
+  pageEl.appendChild(el);
+}
+function fillDate(idx) {
+  const el = document.getElementById('ff-' + idx);
+  const today = new Date().toLocaleDateString(undefined, {year: 'numeric', month: 'long', day: 'numeric'});
+  VALUES[idx] = {type: 'date', text: today};
+  el.classList.add('filled');
+  el.innerHTML = '<span>📅 ' + today + '</span>';
+}
+const pad = document.getElementById('pad');
+const ctx = pad.getContext('2d');
+let drawing = false, hasInk = false;
+function fitPad() {
+  const r = pad.getBoundingClientRect();
+  pad.width = r.width * 2; pad.height = r.height * 2;
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
+  ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a2233';
+}
+function pos(e) { const r = pad.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+pad.addEventListener('pointerdown', e => { drawing = true; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); e.preventDefault(); });
+pad.addEventListener('pointermove', e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); hasInk = true; e.preventDefault(); });
+pad.addEventListener('pointerup', () => drawing = false);
+pad.addEventListener('pointerleave', () => drawing = false);
+function clearPad() { ctx.clearRect(0, 0, pad.width, pad.height); hasInk = false; document.getElementById('typedSig').value = ''; }
+function sigMode(m) {
+  SIG_MODE = m;
+  document.getElementById('modeDraw').classList.toggle('on', m === 'draw');
+  document.getElementById('modeType').classList.toggle('on', m === 'type');
+  pad.style.display = m === 'draw' ? '' : 'none';
+  document.getElementById('typeWrap').style.display = m === 'type' ? '' : 'none';
+}
+function openPad(idx, label) {
+  ACTIVE_FIELD = idx;
+  document.getElementById('padTitle').textContent = label || 'Sign here';
+  document.getElementById('padBg').classList.add('open');
+  setTimeout(fitPad, 50);
+}
+function renderTyped() {
+  const v = document.getElementById('typedSig').value.trim();
+  const tp = document.getElementById('typePad');
+  const w = 700, h = 220;
+  tp.width = w; tp.height = h;
+  const tc = tp.getContext('2d');
+  if (!v) return;
+  tc.fillStyle = '#1a2233';
+  tc.font = 'italic 700 84px "Segoe Script", "Brush Script MT", cursive';
+  tc.textAlign = 'center'; tc.textBaseline = 'middle';
+  tc.fillText(v, w / 2, h / 2);
+}
+document.getElementById('typedSig').addEventListener('input', renderTyped);
+function padDone() {
+  let url;
+  if (SIG_MODE === 'type') {
+    const tv = document.getElementById('typedSig').value.trim();
+    if (!tv) return;
+    renderTyped();
+    url = document.getElementById('typePad').toDataURL('image/png');
+  } else {
+    if (!hasInk) return;
+    url = pad.toDataURL('image/png');
+  }
+  VALUES[ACTIVE_FIELD] = {type: 'signature', dataUrl: url};
+  const el = document.getElementById('ff-' + ACTIVE_FIELD);
+  el.classList.add('filled');
+  el.innerHTML = '<img src="' + url + '" style="max-width:92%;max-height:88%">';
+  document.getElementById('padBg').classList.remove('open');
+  clearPad();
+}
+document.getElementById('padBg').addEventListener('click', e => { if (e.target.id === 'padBg') e.target.classList.remove('open'); });
+
+async function submitAll() {
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  const missing = FIELDS.map((f, i) => [f, i]).filter(([f, i]) => f.role !== 'company' && !VALUES[i] && f.type !== 'text');
+  if (missing.length) {
+    err.textContent = 'Please fill every highlighted box — ' + missing.length + ' still empty.';
+    err.style.display = 'block';
+    const first = document.getElementById('ff-' + missing[0][1]);
+    if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+    return;
+  }
+  const signerName = (Object.values(VALUES).find(v => v.type === 'name') || {}).text
+    || document.getElementById('typedSig').value.trim() || 'Signer';
+  const sigEntry = Object.values(VALUES).find(v => v.type === 'signature' && v.dataUrl);
+  if (!sigEntry) { err.textContent = 'Please add your signature.'; err.style.display = 'block'; return; }
+  const btn = document.getElementById('signBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  const payload = { token: TOKEN, name: signerName, signature: sigEntry.dataUrl,
+                    fields: FIELDS.map((f, i) => ({...f, value: VALUES[i] || null})) };
+  const r = await fetch('/api/documents/sign-submit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('done').style.display = 'block';
+  } else {
+    err.textContent = d.error || 'Something went wrong'; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = '✅ Submit Signed Document';
+  }
+}
+</script></body></html>

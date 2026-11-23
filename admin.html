@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANOSagent — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08090a; --bg-panel: #0f1011; --surface: rgba(255,255,255,0.02); --surface2: rgba(255,255,255,0.04); --surface3: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.09);
+    --text: #f7f8f8; --text2: #d0d6e0; --muted: #8a8f98; --faint: #62666d;
+    --accent: #f7f8f8; --accent-bg: #f7f8f8; --accent-hover: #ffffff;
+    --green: #4ade80; --amber: #fbbf24; --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -0.011em; }
+  .topbar { background: rgba(8,9,10,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 40; }
+  .brand { font-weight: 600; letter-spacing: -0.02em; }
+  .brand .adm { background: var(--accent-bg); color: #0a0a0a; font-size: .62rem; font-weight: 700; border-radius: 4px; padding: 2.5px 7px; margin-left: 8px; vertical-align: middle; letter-spacing: .08em; }
+  .refresh { background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); border-radius: 6px; padding: 6px 13px; cursor: pointer; font-size: .78rem; font-weight: 500; transition: all .13s; }
+  .refresh:hover { background: var(--surface3); color: var(--text); border-color: rgba(255,255,255,0.14); }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); border-radius: 0; padding: 9px 14px; cursor: pointer; font-size: .85rem; font-weight: 500; font-family: inherit; margin-bottom: -1px; transition: color .13s, border-color .13s; }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--text); border-bottom-color: #f7f8f8; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px,1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; transition: border-color .15s; }
+  .stat:hover { border-color: var(--border2); }
+  .stat .l { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); font-weight: 600; }
+  .stat .v { font-size: 1.7rem; font-weight: 600; color: var(--text); margin-top: 5px; letter-spacing: -0.03em; }
+  .stat .v.warn { color: var(--amber); }
+  .stat .s { font-size: .74rem; color: var(--faint); margin-top: 3px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 12px; }
+  .card h3 { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin-bottom: 14px; font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th { text-align: left; color: var(--faint); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; padding: 7px 10px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  td { padding: 11px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: var(--surface2); }
+  .cname { font-weight: 600; letter-spacing: -0.01em; }
+  .cbiz { color: var(--faint); font-size: .76rem; margin-top: 2px; }
+  .plan-tag { font-size: .7rem; font-weight: 600; border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+  .plan-lite { background: rgba(255,255,255,0.08); color: #d0d6e0; }
+  .plan-starter { background: var(--surface3); color: var(--text2); }
+  .plan-pro { background: rgba(74,222,128,0.1); color: var(--green); }
+  .plan-scale { background: rgba(248,113,113,0.1); color: var(--red); }
+  .usage-cell { min-width: 140px; }
+  .ubar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .ubar-fill { height: 100%; background: var(--green); border-radius: 3px; }
+  .ubar-fill.warn { background: var(--amber); }
+  .ubar-fill.max { background: var(--red); }
+  .uval { font-size: .78rem; color: var(--text2); font-variant-numeric: tabular-nums; }
+  .uval.max { color: var(--red); font-weight: 600; }
+  .uval.warn { color: var(--amber); font-weight: 600; }
+  .empty { color: var(--faint); text-align: center; padding: 30px; font-size: .88rem; }
+  .prov-no { color: var(--amber); font-size: .75rem; }
+  .login-row { margin-bottom: 8px; }
+  input, select { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-size: .92rem; font-family: inherit; transition: border-color .13s, box-shadow .13s; }
+  input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,0.12); }
+  input::placeholder { color: var(--faint); }
+  .btn { background: var(--accent-bg); color: #0a0a0a; border: none; font-weight: 600; padding: 11px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: .88rem; letter-spacing: -0.01em; transition: background .13s; }
+  .btn:hover { background: var(--accent-hover); }
+  .btn.small { padding: 7px 14px; font-size: .8rem; }
+  .btn.danger { background: var(--red); color: #fff; }
+  .lock-wrap { max-width: 360px; margin: 14vh auto; padding: 20px; }
+  .lock-card { background: var(--bg-panel); border: 1px solid var(--border2); border-radius: 12px; padding: 30px; }
+  .lock-card .sub { color: var(--muted); font-size: .86rem; margin-bottom: 18px; }
+  .err { color: var(--red); font-size: .83rem; margin-top: 10px; min-height: 1.1em; }
+  .hidden { display: none !important; }
+  .mrr-note { color: var(--faint); font-size: .76rem; margin-top: 6px; }
+
+  .ticket { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 8px; }
+  .ticket .t-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .ticket .t-subj { font-weight: 600; }
+  .ticket .t-meta { color: var(--faint); font-size: .74rem; margin-top: 3px; }
+  .ticket .t-msg { color: var(--muted); font-size: .84rem; margin-top: 8px; white-space: pre-wrap; }
+  .prio { font-size: .66rem; font-weight: 700; border-radius: 4px; padding: 2px 8px; text-transform: uppercase; letter-spacing: .05em; }
+  .prio-urgent { background: rgba(248,113,113,0.12); color: var(--red); }
+  .prio-high { background: rgba(251,191,36,0.12); color: var(--amber); }
+  .prio-normal { background: var(--surface3); color: var(--muted); }
+  .tstatus { font-size: .66rem; font-weight: 600; border-radius: 4px; padding: 2px 8px; }
+  .tstatus-open { background: rgba(251,191,36,0.12); color: var(--amber); }
+  .tstatus-closed { background: rgba(74,222,128,0.1); color: var(--green); }
+
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(3px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-card { background: var(--bg-panel); border: 1px solid var(--border2); border-radius: 12px; padding: 24px; max-width: 640px; width: 100%; max-height: 82vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+  .modal-head h3 { font-size: .95rem; color: var(--text); margin: 0; text-transform: none; letter-spacing: -0.01em; font-weight: 600; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row .full { grid-column: 1 / -1; }
+  .created-box { background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; padding: 14px; margin-top: 14px; font-size: .86rem; }
+  .created-box code { background: rgba(255,255,255,0.06); padding: 2px 7px; border-radius: 4px; font-size: .8rem; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div class="lock-wrap" id="lockView">
+  <div class="lock-card">
+     <img src="/anos-logo-white.png" alt="ANOS" style="width:96px;margin-bottom:10px;display:block;"> <span class="adm">ADMIN</span>
+    <div class="sub">Owner access only.</div>
+    <div class="login-row"><input type="password" id="adminSecret" placeholder="Admin secret" onkeydown="if(event.key==='Enter')unlock()"></div>
+    <button class="btn" style="width:100%" onclick="unlock()">Unlock</button>
+    <div class="err" id="lockErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN DASH -->
+<div id="adminView" class="hidden">
+  <div class="topbar">
+    <span class="brand"><img src="/anos-logo-white.png" alt="ANOS" style="height:24px;vertical-align:middle;"><span class="adm">ADMIN</span></span>
+    <button class="refresh" onclick="loadAll()">↻ Refresh</button>
+  </div>
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" id="tab-dash" onclick="showTab('dash')">Dashboard</button>
+      <button class="tab" id="tab-customers" onclick="showTab('customers')">Customers</button>
+      <button class="tab" id="tab-support" onclick="showTab('support')">Support <span id="suppBadge" class="hidden" style="background:#f7f8f8;color:#0a0a0a;border-radius:8px;padding:1px 7px;font-size:.7rem;margin-left:4px"></span></button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="view-dash">
+      <div class="stats">
+        <div class="stat"><div class="l">Customers</div><div class="v" id="sCustomers">0</div><div class="s" id="sProv"></div></div>
+        <div class="stat"><div class="l">MRR</div><div class="v" id="sMRR">$0</div><div class="s" id="sMRRNote">monthly recurring</div></div>
+        <div class="stat"><div class="l">AI Spend Today</div><div class="v" id="sSpend">$0.00</div><div class="s">across all customers</div></div>
+        <div class="stat"><div class="l">Near Cap</div><div class="v warn" id="sNear">0</div><div class="s">≥75% of daily limit</div></div>
+        <div class="stat"><div class="l">Open Tickets</div><div class="v warn" id="sTickets">0</div><div class="s">support queue</div></div>
+        <div class="stat"><div class="l">Health</div><div class="v" id="sHealth" style="font-size:1.3rem;padding-top:6px">—</div><div class="s">🟢🟡🔴 customers</div></div>
+      </div>
+      <div class="card">
+        <h3>📈 Growth — last 6 months</h3>
+        <canvas id="mrrChart" width="980" height="220" style="width:100%;height:220px"></canvas>
+        <div class="mrr-note" id="chartNote">bars = new signups · line = cumulative MRR (list prices until Stripe is live)</div>
+      </div>
+      <div class="card">
+        <h3>💳 Revenue</h3>
+        <div id="revenueBox" class="mrr-note" style="margin-top:0;font-size:.9rem">loading…</div>
+      </div>
+      <div class="card">
+        <h3>🔥 Credit-burn leaderboard — this month</h3>
+        <div style="overflow-x:auto"><table id="boardTable">
+          <thead><tr><th>Customer</th><th>Plan</th><th>AI spend (mo)</th><th>Today</th><th>Pays/mo</th><th>Margin signal</th></tr></thead>
+          <tbody id="boardBody"></tbody>
+        </table></div>
+        <div class="empty hidden" id="boardEmpty">No usage yet.</div>
+      </div>
+      <div class="card">
+        <h3>⚡ Activity feed</h3>
+        <div id="feedList"><div class="empty" style="padding:14px">No activity yet — signups, plan changes and cap hits land here.</div></div>
+      </div>
+      <div class="card">
+        <h3>📣 Broadcast to all customers</h3>
+        <input id="bcTitle" placeholder="Title (e.g. Scheduled maintenance Saturday)" style="margin-bottom:8px">
+        <input id="bcMsg" placeholder="Message — shows as a banner in every customer portal">
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+          <button class="btn small" onclick="sendBroadcast()">Send to everyone</button>
+          <span class="mrr-note" id="bcNote" style="margin-top:0"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Plan distribution</h3>
+        <div class="mrr-note" id="planDist" style="margin-top:0;font-size:.9rem">—</div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div id="view-customers" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div></div>
+        <button class="btn small" onclick="openAdd()">+ Add customer</button>
+      </div>
+      <div class="card">
+        <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Customer</th><th>Plan</th><th>Usage Today</th><th>This Month</th><th>MRR</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="custBody"></tbody>
+        </table>
+        </div>
+        <div class="empty" id="emptyMsg">No customers yet — add your first one above.</div>
+      </div>
+    </div>
+
+    <!-- SUPPORT -->
+    <div id="view-support" class="hidden">
+      <div id="ticketList"></div>
+      <div class="empty" id="ticketEmpty">No support tickets yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- INTEGRATIONS MODAL -->
+<div id="intModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="intTitle">Integrations</h3>
+      <button class="refresh" onclick="closeInt()">✕ Close</button>
+    </div>
+    <div id="intBody"></div>
+  </div>
+</div>
+
+<!-- NOTES MODAL -->
+<div id="notesModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="notesTitle">Notes</h3>
+      <button class="refresh" onclick="document.getElementById('notesModal').classList.add('hidden')">✕ Close</button>
+    </div>
+    <textarea id="notesText" rows="6" style="width:100%;padding:11px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.04);color:#f7f8f8;font-size:.9rem;font-family:inherit" placeholder="e.g. Wanted the snow pack in November. Prefers text over email."></textarea>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+      <button class="btn small" onclick="saveNotes()">Save notes</button>
+      <span class="mrr-note" id="notesSaved" style="margin-top:0"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CUSTOMER MODAL -->
+<div id="addModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Add customer</h3>
+      <button class="refresh" onclick="closeAdd()">✕ Close</button>
+    </div>
+    <div class="row">
+      <div><input id="addName" placeholder="Contact name"></div>
+      <div><input id="addBusiness" placeholder="Business name"></div>
+      <div class="full"><input id="addEmail" type="email" placeholder="Email (login)"></div>
+      <div class="full">
+        <select id="addPlan">
+          <option value="lite">Lite — $147/mo (up to 3 features)</option>
+          <option value="starter" selected>Starter — $297/mo (all features)</option>
+          <option value="pro">Pro — $497/mo (all + voice)</option>
+          <option value="scale">Scale — $797/mo (all + voice + multi-location)</option>
+        </select>
+      </div>
+    </div>
+    <div class="err" id="addErr"></div>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="createCustomer()" id="addBtn">Create account + provision key</button>
+    <div id="addResult" class="hidden created-box"></div>
+  </div>
+</div>
+
+<script>
+let SECRET = sessionStorage.getItem('admin_secret') || '';
+const PLAN_LIMITS = { lite: 0.40, starter: 1.0, pro: 3.0, scale: 8.0 };
+const PLAN_NAMES = { lite: 'Lite', starter: 'Starter', pro: 'Pro', scale: 'Scale' };
+const PLAN_MONTHLY = { lite: 147, starter: 297, pro: 497, scale: 797 };
+
+function showTab(t) {
+  ['dash','customers','support'].forEach(x => {
+    document.getElementById('view-' + x).classList.toggle('hidden', x !== t);
+    document.getElementById('tab-' + x).classList.toggle('active', x === t);
+  });
+  if (t === 'support') loadSupport();
+}
+
+async function loadAll() {
+  const res = await fetch('/api/admin/customers', { headers: { 'X-Admin': SECRET } });
+  const data = await res.json();
+  if (data.error) { lock(); return; }
+  document.getElementById('lockView').classList.add('hidden');
+  document.getElementById('adminView').classList.remove('hidden');
+  CUSTS = data.customers || [];
+  renderCustomers(CUSTS);
+  loadSummary();
+  loadSupportCount();
+  loadInsights();
+  loadFeed();
+  loadRevenue();
+}
+
+let CUSTS = [];
+const KIND_ICO = { signup: '🎉', plan: '🔄', cap: '⚡', admin: '🛡' };
+
+async function loadInsights() {
+  const res = await fetch('/api/admin/insights', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  if (d.error) return;
+  // health stat
+  const hc = d.health_counts || {};
+  document.getElementById('sHealth').innerHTML =
+    `<span style="color:#4ade80">${hc.green||0}</span> / <span style="color:#fbbf24">${hc.yellow||0}</span> / <span style="color:#f87171">${hc.red||0}</span>`;
+  // chart
+  drawChart(d.months || []);
+  // leaderboard
+  const bb = document.getElementById('boardBody');
+  bb.innerHTML = '';
+  document.getElementById('boardEmpty').classList.toggle('hidden', (d.leaderboard||[]).length > 0);
+  (d.leaderboard || []).forEach(r => {
+    const margin = r.monthly_rev > 0 ? (r.month / r.monthly_rev) : 0;
+    const sig = margin > 0.15 ? '<span style="color:#f87171">⚠ hot</span>' : margin > 0.05 ? '<span style="color:#fbbf24">watch</span>' : '<span style="color:#4ade80">healthy</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><div class="cname">${r.name || r.email}</div><div class="cbiz">${r.business||''}</div></td>
+      <td class="uval">${PLAN_NAMES[r.plan]||r.plan}</td>
+      <td class="uval">$${r.month.toFixed(2)}</td>
+      <td class="uval">$${r.today.toFixed(2)}</td>
+      <td class="uval">$${r.monthly_rev}</td>
+      <td>${sig}</td>`;
+    bb.appendChild(tr);
+  });
+}
+
+function drawChart(months) {
+  const cv = document.getElementById('mrrChart');
+  if (!cv || !months.length) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, pad = 34;
+  ctx.clearRect(0, 0, W, H);
+  const maxMrr = Math.max(...months.map(m => m.mrr), 1);
+  const maxSu = Math.max(...months.map(m => m.signups), 1);
+  const bw = (W - pad * 2) / months.length;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) {
+    const y = pad + (H - pad * 2) * i / 3;
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  }
+  // bars (signups)
+  months.forEach((m, i) => {
+    const x = pad + i * bw + bw * 0.22;
+    const h = (H - pad * 2) * (m.signups / maxSu);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(x, H - pad - h, bw * 0.56, h);
+    ctx.fillStyle = '#8a8f98'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(m.label, pad + i * bw + bw / 2, H - pad + 16);
+    if (m.signups) { ctx.fillStyle = '#d0d6e0'; ctx.fillText(m.signups, x + bw * 0.28, H - pad - h - 5); }
+  });
+  // MRR line
+  ctx.strokeStyle = '#f7f8f8'; ctx.lineWidth = 2.5; ctx.beginPath();
+  months.forEach((m, i) => {
+    const x = pad + i * bw + bw / 2;
+    const y = H - pad - (H - pad * 2) * (m.mrr / maxMrr);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  months.forEach((m, i) => {
+    const x = pad + i * bw + bw / 2;
+    const y = H - pad - (H - pad * 2) * (m.mrr / maxMrr);
+    ctx.fillStyle = '#f7f8f8'; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f7f8f8'; ctx.font = '600 11px Inter, sans-serif';
+    ctx.fillText('$' + m.mrr, x, y - 10);
+  });
+}
+
+async function loadFeed() {
+  const res = await fetch('/api/admin/activity', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  const el = document.getElementById('feedList');
+  if (d.error || !(d.activity || []).length) return;
+  el.innerHTML = d.activity.map(a => `
+    <div style="display:flex;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(255,255,255,0.05);align-items:baseline">
+      <span>${KIND_ICO[a.kind] || '•'}</span>
+      <div style="flex:1"><div style="font-size:.87rem">${a.text}</div>
+      <div style="color:#62666d;font-size:.72rem;margin-top:2px">${new Date(a.ts*1000).toLocaleString()}</div></div>
+    </div>`).join('');
+}
+
+async function loadRevenue() {
+  const res = await fetch('/api/admin/revenue', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  const box = document.getElementById('revenueBox');
+  if (d.mode === 'stripe') {
+    box.innerHTML = `<b style="color:#4ade80;font-size:1.1rem">$${d.mrr.toLocaleString()} MRR</b> · ${d.active_subs} active subs · ${d.failed_charges} failed charges (last 100)
+      <div style="margin-top:8px;color:#7c8494">Upcoming renewals: ${(d.upcoming||[]).slice(0,5).map(u => new Date(u.renews*1000).toLocaleDateString()).join(', ') || '—'}</div>`;
+    document.getElementById('sMRRNote').textContent = 'live from Stripe';
+  } else if (d.mode === 'list_price') {
+    box.innerHTML = `<b style="color:#4ade80;font-size:1.1rem">$${(d.mrr||0).toLocaleString()} MRR</b> — plan list prices.<div style="margin-top:6px">${d.note}</div>`;
+  } else {
+    box.innerHTML = `<span style="color:#f87171">Stripe error: ${d.error||'unknown'}</span>`;
+  }
+}
+
+async function sendBroadcast() {
+  const title = document.getElementById('bcTitle').value.trim();
+  const message = document.getElementById('bcMsg').value.trim();
+  const note = document.getElementById('bcNote');
+  if (!message) { note.textContent = '⚠ Write a message first'; return; }
+  if (!confirm(`Broadcast to ALL customers?\n\n${title}\n${message}`)) return;
+  const res = await fetch('/api/admin/broadcast', {
+    method: 'POST', headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, message })
+  });
+  const d = await res.json();
+  note.textContent = d.ok ? `✓ Sent to ${d.sent} customers` : '⚠ ' + (d.error || 'failed');
+  if (d.ok) { document.getElementById('bcTitle').value = ''; document.getElementById('bcMsg').value = ''; loadFeed(); }
+}
+
+async function togglePause(email, action) {
+  if (!confirm(`${action === 'pause' ? 'PAUSE' : 'RESUME'} ${email}?${action === 'pause' ? ' Their AI cap drops to zero until resumed.' : ''}`)) return;
+  const res = await fetch('/api/admin/customer/status', {
+    method: 'POST', headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, action })
+  });
+  const d = await res.json();
+  if (d.error) alert('Error: ' + d.error);
+  loadAll();
+}
+
+let notesEmail = '';
+function openNotes(email, name) {
+  notesEmail = email;
+  const c = CUSTS.find(x => x.email === email) || {};
+  document.getElementById('notesTitle').textContent = `Notes — ${name} (${email})`;
+  document.getElementById('notesText').value = c.admin_notes || '';
+  document.getElementById('notesSaved').textContent = '';
+  document.getElementById('notesModal').classList.remove('hidden');
+}
+async function saveNotes() {
+  const res = await fetch('/api/admin/customer/notes', {
+    method: 'POST', headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: notesEmail, notes: document.getElementById('notesText').value })
+  });
+  const d = await res.json();
+  const el = document.getElementById('notesSaved');
+  el.textContent = d.ok ? '✓ Saved' : '⚠ ' + (d.error || 'failed');
+  const c = CUSTS.find(x => x.email === notesEmail);
+  if (c && d.ok) c.admin_notes = document.getElementById('notesText').value;
+  setTimeout(() => el.textContent = '', 2500);
+}
+
+async function loadSummary() {
+  const res = await fetch('/api/admin/summary', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  if (d.error) return;
+  document.getElementById('sCustomers').textContent = d.customers;
+  document.getElementById('sProv').textContent = d.live_keys + ' with live keys';
+  document.getElementById('sMRR').textContent = '$' + d.mrr.toLocaleString();
+  document.getElementById('sSpend').textContent = '$' + d.ai_spend_today.toFixed(2);
+  document.getElementById('sNear').textContent = d.near_cap;
+  document.getElementById('sTickets').textContent = d.open_tickets;
+}
+
+async function loadSupportCount() {
+  const res = await fetch('/api/admin/support', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  if (d.error) return;
+  const open = (d.tickets || []).filter(t => t.status === 'open').length;
+  const b = document.getElementById('suppBadge');
+  b.classList.toggle('hidden', open === 0);
+  b.textContent = open;
+}
+
+function renderCustomers(custs) {
+  const dist = {};
+  const body = document.getElementById('custBody');
+  body.innerHTML = '';
+  document.getElementById('emptyMsg').style.display = custs.length ? 'none' : 'block';
+
+  custs.forEach(c => {
+    const lim = PLAN_LIMITS[c.plan] || 1;
+    const pct = Math.min(100, ((c.usage_today||0)/lim)*100);
+    dist[PLAN_NAMES[c.plan]] = (dist[PLAN_NAMES[c.plan]]||0)+1;
+    const cls = pct>=100?'max':pct>=75?'warn':'';
+    const tr = document.createElement('tr');
+    const planOpts = Object.keys(PLAN_NAMES).map(p =>
+      `<option value="${p}" ${p===c.plan?'selected':''}>${PLAN_NAMES[p]} $${PLAN_MONTHLY[p]}/mo</option>`).join('');
+    const hIco = {green:'🟢', yellow:'🟡', red:'🔴'}[c.health] || '⚪';
+    const hTip = (c.health_reasons||[]).join('; ') || 'healthy';
+    const paused = c.billing_status === 'paused';
+    tr.innerHTML = `
+      <td><div class="cname">${hIco} ${c.name} ${paused?'<span style="font-size:.65rem;background:rgba(248,113,113,0.12);color:#f87171;border-radius:5px;padding:2px 6px;margin-left:4px">PAUSED</span>':''}</div>
+          <div class="cbiz">${c.business||''} · ${c.email}</div>
+          ${c.health!=='green'?`<div class="cbiz" style="color:#fbbf24">${hTip}</div>`:''}</td>
+      <td><select style="padding:5px 8px;font-size:.75rem;width:auto" onchange="changePlan('${c.email}', this.value)">${planOpts}</select></td>
+      <td class="usage-cell">
+        <span class="uval ${cls}">$${(c.usage_today||0).toFixed(2)} / $${lim.toFixed(2)}</span>
+        <div class="ubar"><div class="ubar-fill ${cls}" style="width:${pct}%"></div></div>
+      </td>
+      <td class="uval">$${(c.usage_month||0).toFixed(2)}</td>
+      <td class="uval">$${c.monthly}</td>
+      <td>${c.provisioned ? '<span class="uval" style="color:#4ade80">● live</span>' : '<span class="prov-no">● no key</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="refresh" style="padding:5px 10px;font-size:.75rem" onclick="impersonate('${c.email}')">View as</button>
+        <button class="refresh" style="padding:5px 10px;font-size:.75rem;margin-left:4px" onclick="manageIntegrations('${c.email}','${c.name}')">Integrations</button>
+        <button class="refresh" style="padding:5px 10px;font-size:.75rem;margin-left:4px" onclick="openNotes('${c.email}','${c.name}')">📝</button>
+        <button class="refresh" style="padding:5px 10px;font-size:.75rem;margin-left:4px;${paused?'color:#4ade80;border-color:#4ade80':'color:#fbbf24;border-color:#fbbf24'}" onclick="togglePause('${c.email}', ${paused?'\'resume\'':'\'pause\''})">${paused?'▶ Resume':'⏸ Pause'}</button>
+        <button class="refresh" style="padding:5px 10px;font-size:.75rem;margin-left:4px;color:#f87171;border-color:#f87171" onclick="deleteCustomer('${c.email}','${c.name}')">Delete</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+
+  document.getElementById('planDist').textContent =
+    Object.entries(dist).map(([k,v])=>`${k} ×${v}`).join('  ·  ') || '—';
+}
+
+// --- Actions ---
+async function changePlan(email, plan) {
+  if (!confirm(`Change ${email} to ${PLAN_NAMES[plan]} ($${PLAN_MONTHLY[plan]}/mo)? Their AI daily cap updates immediately.`)) { loadAll(); return; }
+  const res = await fetch('/api/admin/customer/plan', {
+    method: 'POST',
+    headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, plan })
+  });
+  const d = await res.json();
+  if (d.error) alert('Error: ' + (d.error || d.error));
+  loadAll();
+}
+
+async function deleteCustomer(email, name) {
+  if (!confirm(`DELETE ${name} (${email})?\n\nThis removes their account from the portal. Their OpenRouter key stops being managed. This cannot be undone.`)) return;
+  const res = await fetch('/api/admin/customer/delete', {
+    method: 'POST',
+    headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  const d = await res.json();
+  if (d.error) alert('Error: ' + d.error);
+  loadAll();
+}
+
+function unlock() {
+  SECRET = document.getElementById('adminSecret').value;
+  sessionStorage.setItem('admin_secret', SECRET);
+  loadAll().then(() => {
+    if (document.getElementById('adminView').classList.contains('hidden'))
+      document.getElementById('lockErr').textContent = 'Wrong secret';
+  });
+}
+function lock() {
+  document.getElementById('lockView').classList.remove('hidden');
+  document.getElementById('adminView').classList.add('hidden');
+}
+if (SECRET) loadAll();
+
+// --- Add customer ---
+function openAdd() {
+  document.getElementById('addModal').classList.remove('hidden');
+  document.getElementById('addErr').textContent = '';
+  document.getElementById('addResult').classList.add('hidden');
+}
+function closeAdd() { document.getElementById('addModal').classList.add('hidden'); }
+async function createCustomer() {
+  const name = document.getElementById('addName').value.trim();
+  const business = document.getElementById('addBusiness').value.trim();
+  const email = document.getElementById('addEmail').value.trim().toLowerCase();
+  const plan = document.getElementById('addPlan').value;
+  if (!name || !email) { document.getElementById('addErr').textContent = 'Name and email are required.'; return; }
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const res = await fetch('/api/admin/create', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ admin_secret: SECRET, name, business, email, plan })
+  });
+  const d = await res.json();
+  btn.disabled = false; btn.textContent = 'Create account + provision key';
+  if (d.error) { document.getElementById('addErr').textContent = d.error; return; }
+  const box = document.getElementById('addResult');
+  box.classList.remove('hidden');
+  box.innerHTML = `<strong>✅ ${name} is in.</strong><br>
+    Login: <code>${d.email}</code><br>
+    Temp password: <code>${d.password}</code><br>
+    Plan: <code>${PLAN_NAMES[plan]}</code><br>
+    ${d.provisioned ? 'AI key provisioned ✔' : '⚠ ' + (d.provision_error || 'key not provisioned')}<br>
+    <span style="color:#8a8f98;font-size:.78rem">Send the customer their login link + this temp password (have them change it in Settings).</span>`;
+  loadAll();
+}
+
+// --- Support ---
+async function loadSupport() {
+  const res = await fetch('/api/admin/support', { headers: { 'X-Admin': SECRET } });
+  const d = await res.json();
+  const list = document.getElementById('ticketList');
+  list.innerHTML = '';
+  const tickets = d.tickets || [];
+  document.getElementById('ticketEmpty').style.display = tickets.length ? 'none' : 'block';
+  tickets.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'ticket';
+    const date = new Date(t.ts * 1000).toLocaleString();
+    div.innerHTML = `
+      <div class="t-head">
+        <div>
+          <span class="t-subj">${t.subject}</span>
+          <span class="prio prio-${t.priority||'normal'}" style="margin-left:8px">${t.priority||'normal'}</span>
+          <span class="tstatus tstatus-${t.status}" style="margin-left:6px">${t.status}</span>
+          <div class="t-meta">${t.name} · ${t.business||t.customer} · ${date}</div>
+        </div>
+        ${t.status==='open' ? `<button class="refresh" style="padding:5px 10px;font-size:.75rem" onclick="closeTicket('${t.customer}', ${t.ts})">Mark resolved</button>` : ''}
+      </div>
+      <div class="t-msg">${t.message}</div>`;
+    list.appendChild(div);
+  });
+  loadSupportCount();
+}
+
+async function closeTicket(email, ts) {
+  await fetch('/api/admin/support/close', {
+    method: 'POST',
+    headers: { 'X-Admin': SECRET, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, ts })
+  });
+  loadSupport();
+  loadSummary();
+}
+
+// --- Impersonate ---
+async function impersonate(email) {
+  const res = await fetch('/api/admin/impersonate', { method: 'GET', headers: { 'X-Admin': SECRET, 'X-Email': email } });
+  const data = await res.json();
+  if (data.error) { alert('Error: ' + data.error); return; }
+  const w = window.open('/', '_blank');
+  const poll = setInterval(() => {
+    try {
+      if (w.document.readyState === 'complete') {
+        clearInterval(poll);
+        w.localStorage.setItem('portal_token', data.token);
+        w.location.reload();
+      }
+    } catch(e) { /* cross-origin safety */ }
+  }, 200);
+}
+
+// --- Integrations modal ---
+let currentEmail = '';
+async function manageIntegrations(email, name) {
+  currentEmail = email;
+  document.getElementById('intTitle').textContent = `Integrations — ${name} (${email})`;
+  document.getElementById('intModal').classList.remove('hidden');
+  const res = await fetch('/api/admin/integrations', { headers: { 'X-Admin': SECRET, 'X-Email': email } });
+  const data = await res.json();
+  const body = document.getElementById('intBody');
+  body.innerHTML = '';
+  if (data.error) { body.innerHTML = `<p style="color:#f87171">${data.error}</p>`; return; }
+  const cat = data.catalog || [];
+  const conn = data.integrations || {};
+  cat.forEach(svc => {
+    const connected = !!conn[svc.service];
+    const card = document.createElement('div');
+    card.style.cssText = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;margin-bottom:10px';
+    let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><strong>${svc.name}</strong> <span style="color:#8a8f98;font-size:.78rem">· ${svc.kind}</span></div>
+      <span style="font-size:.7rem;padding:3px 8px;border-radius:5px;${connected?'background:rgba(74,222,128,0.1);color:#4ade80':'background:rgba(255,255,255,0.05);color:#8a8f98'}">${connected?'Connected':'Not connected'}</span>
+    </div>`;
+    html += `<div style="color:#8a8f98;font-size:.8rem;margin-bottom:8px">${svc.desc}</div>`;
+    if (connected) {
+      html += `<button class="refresh" style="padding:5px 10px;font-size:.75rem;color:#f87171;border-color:#f87171" onclick="adminDisconnect('${svc.service}')">Disconnect</button>`;
+    } else {
+      svc.fields.forEach(f => {
+        const lbl = f.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+        html += `<input type="${f.includes('password')||f.includes('key')||f.includes('token')?'password':'text'}" placeholder="${lbl}" id="int_${svc.service}_${f}" style="margin-bottom:6px">`;
+      });
+      html += `<button class="btn" style="padding:6px 14px;font-size:.78rem" onclick="adminConnect('${svc.service}')">Connect</button>`;
+    }
+    card.innerHTML = html;
+    body.appendChild(card);
+  });
+}
+function closeInt() {
+  document.getElementById('intModal').classList.add('hidden');
+  currentEmail = '';
+}
+async function adminConnect(service) {
+  const fields = {};
+  document.querySelectorAll(`#intBody input[id^="int_${service}_"]`).forEach(inp => {
+    fields[inp.id.replace(`int_${service}_`,'')] = inp.value;
+  });
+  const res = await fetch('/api/admin/integrations', {
+    method: 'POST',
+    headers: { 'X-Admin': SECRET, 'X-Email': currentEmail, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service, ...fields })
+  });
+  const data = await res.json();
+  if (data.error) { alert('Error: ' + data.error); return; }
+  manageIntegrations(currentEmail, currentEmail);
+}
+async function adminDisconnect(service) {
+  if (!confirm(`Disconnect ${service} for ${currentEmail}?`)) return;
+  const res = await fetch('/api/admin/integrations', {
+    method: 'POST',
+    headers: { 'X-Admin': SECRET, 'X-Email': currentEmail, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service, action: 'disconnect' })
+  });
+  const data = await res.json();
+  if (data.error) { alert('Error: ' + data.error); return; }
+  manageIntegrations(currentEmail, currentEmail);
+}
+</script>
+</body>
+</html>

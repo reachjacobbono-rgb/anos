@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Page Mock</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #080a10; color: #f0f2f7;
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 430px; margin: 0 auto; padding: 12px 5px 60px; }
+  .back { color: #5c6577; font-size: .82rem; padding: 6px 8px 10px; display: inline-block; }
+
+  /* ===== HERO CARD ===== */
+  .hero {
+    background: linear-gradient(180deg, #131824, #0e1219);
+    border: 1px solid #232c3d; border-radius: 16px;
+    padding: 18px 18px 14px; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -1px; left: 15%; right: 15%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(79,125,255,.7), transparent);
+  }
+  .hero-top { display: flex; align-items: center; gap: 14px; }
+  .hero-mono {
+    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg, #f5f5f5, #b8b8b8); color: #0a0a0a;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.2rem;
+  }
+  .hero-id { flex: 1; min-width: 0; }
+  .hero-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .hero-job { color: #8b93a3; font-size: .84rem; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hero-kebab { color: #5c6577; font-size: 1.3rem; padding: 6px; }
+
+  .hero-row2 { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+  .hero-amt { font-size: 1.5rem; font-weight: 800; color: #4ade80; letter-spacing: -.02em; }
+  .hero-amt-sub { font-size: .62rem; color: #5c6577; text-transform: uppercase; letter-spacing: .1em; text-align: left; }
+  .stage-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(251,191,36,.09); color: #fbbf24;
+    border: 1px solid rgba(251,191,36,.25);
+    font-size: .72rem; font-weight: 700; border-radius: 8px; padding: 5px 11px;
+  }
+  .stage-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .hero-next {
+    margin-top: 13px; padding: 10px 13px;
+    background: rgba(79,125,255,.07); border: 1px solid rgba(79,125,255,.18);
+    border-radius: 10px; font-size: .8rem; color: #c9ced6;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .hero-next .ic { font-size: .95rem; }
+  .hero-next b { color: #fff; font-weight: 700; }
+
+  .hero-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 13px; }
+  .hact {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    background: #0a0d15; border: 1px solid #232c3d; border-radius: 11px;
+    padding: 10px 4px; font-size: .62rem; font-weight: 700; color: #8b93a3;
+    cursor: pointer; transition: all .15s;
+  }
+  .hact:hover { border-color: #2f3a52; color: #f0f2f7; transform: translateY(-1px); }
+  .hact svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.9; }
+  .hact.go { background: rgba(79,125,255,.1); border-color: rgba(79,125,255,.3); color: #7da8ff; }
+
+  /* ===== TABS ===== */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid #1a2130; margin: 6px 5px 0; }
+  .tab {
+    flex: 1; background: none; border: none; color: #5c6577;
+    font-size: .82rem; font-weight: 700; padding: 11px 4px; cursor: pointer; position: relative;
+  }
+  .tab.on { color: #f0f2f7; }
+  .tab.on::after {
+    content: ''; position: absolute; left: 15%; right: 15%; bottom: -1px; height: 2px;
+    background: #4f7dff; border-radius: 2px;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: #0e1219; border: 1px solid #1a2130; border-radius: 14px;
+    padding: 15px 16px; margin: 12px 5px 0;
+  }
+  .card h4 {
+    font-size: .64rem; text-transform: uppercase; letter-spacing: .14em;
+    color: #5c6577; font-weight: 800; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .card h4 .edit { text-transform: none; letter-spacing: 0; font-size: .74rem; font-weight: 600; color: #7da8ff; }
+
+  .c-row { display: flex; align-items: center; gap: 11px; padding: 8px 0; }
+  .c-row + .c-row { border-top: 1px solid #131824; }
+  .c-ic {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    background: #131824; border: 1px solid #232c3d;
+    display: flex; align-items: center; justify-content: center;
+    color: #8b93a3; font-size: .8rem;
+  }
+  .c-ic svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .c-body { flex: 1; min-width: 0; }
+  .c-k { font-size: .64rem; color: #5c6577; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+  .c-v { font-size: .88rem; font-weight: 600; color: #f0f2f7; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-act { font-size: .7rem; color: #7da8ff; font-weight: 700; flex-shrink: 0; }
+
+  .notes { background: rgba(251,191,36,.05); border-color: rgba(251,191,36,.2); }
+  .notes .txt { font-size: .85rem; color: #e8d9a8; line-height: 1.5; }
+
+  .foot { text-align: center; color: #434c5e; font-size: .72rem; padding: 30px 0 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="back">← Back to leads</span>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-mono">C</div>
+      <div class="hero-id">
+        <div class="hero-name">Colin</div>
+        <div class="hero-job">Full property cleanup — 22 Goodwin Dr, Guelph</div>
+      </div>
+      <span class="hero-kebab">⋮</span>
+    </div>
+    <div class="hero-row2">
+      <div>
+        <div class="hero-amt-sub">Job value</div>
+        <div class="hero-amt">$2,000</div>
+      </div>
+      <span class="stage-pill"><span class="dot"></span>Job Completed</span>
+    </div>
+    <div class="hero-next">
+      <span class="ic">🧾</span>
+      <span>Next: <b>invoice Colin for the cleanup</b> — job wrapped Nov 2</span>
+    </div>
+    <div class="hero-actions">
+      <div class="hact go"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>Call</div>
+      <div class="hact"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Text</div>
+      <div class="hact"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>Email</div>
+      <div class="hact"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Map</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on">Timeline</button>
+    <button class="tab">Documents</button>
+    <button class="tab">Messages</button>
+  </div>
+
+  <!-- CONTACT CARD -->
+  <div class="card">
+    <h4>CONTACT <span class="edit">Edit ✎</span></h4>
+    <div class="c-row">
+      <span class="c-ic"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span>
+      <div class="c-body"><div class="c-k">Phone</div><div class="c-v">+1 (226) 218-9552</div></div>
+      <span class="c-act">Call</span>
+    </div>
+    <div class="c-row">
+      <span class="c-ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
+      <div class="c-body"><div class="c-k">Email</div><div class="c-v">colin.serroul@gmail.com</div></div>
+      <span class="c-act">Send</span>
+    </div>
+    <div class="c-row">
+      <span class="c-ic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+      <div class="c-body"><div class="c-k">Address</div><div class="c-v">22 Goodwin Drive, Guelph, ON</div></div>
+      <span class="c-act">Nav</span>
+    </div>
+  </div>
+
+  <!-- JOB CARD -->
+  <div class="card">
+    <h4>JOB</h4>
+    <div class="c-row">
+      <span class="c-ic">🌳</span>
+      <div class="c-body"><div class="c-k">Scope</div><div class="c-v">Full property cleanup — all trees &amp; debris</div></div>
+    </div>
+    <div class="c-row">
+      <span class="c-ic">📅</span>
+      <div class="c-body"><div class="c-k">Completed</div><div class="c-v">November 2, 2026</div></div>
+    </div>
+    <div class="c-row">
+      <span class="c-ic">📣</span>
+      <div class="c-body"><div class="c-k">Source</div><div class="c-v">Repeat client</div></div>
+    </div>
+  </div>
+
+  <!-- NOTES CARD -->
+  <div class="card notes">
+    <h4>OPERATOR NOTES</h4>
+    <div class="txt">Back gate sticks — lift while pulling. Dog friendly. Neighbour on left also interested, grab card next visit.</div>
+  </div>
+
+  <div class="foot">mock — not live</div>
+</div>
+</body>
+</html>
